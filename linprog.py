@@ -2,7 +2,7 @@ from scipy import optimize
 import pulp
 import numpy as np
 #简单的题目一维变量
-#法一:调用scipy库中linprog函数
+#法一:调用scipy库中optimize模块的linprog函数
 #（约束条件无等号）函数默认取最小值
 c = np.array([4, -1])  #目标函数
 A = np.array([[-1, 1], [-1, -1]])#限制条件1/2 且符号为<=
@@ -87,6 +87,6 @@ print(row_ind)  # 开销矩阵对应的行索引
 print(col_ind)  # 对应行索引的最优指派的列索引
 print(cost[row_ind, col_ind])  # 提取每个行索引的最优指派列索引所在的元素，形成数组
 print(cost[row_ind, col_ind].sum())  # 数组求和
-
+#分段函数的整数规划??
 
 
