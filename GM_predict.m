@@ -2,8 +2,18 @@
 %（1）输入前期的小样本数据
 %（2）输入预测个数
 %（3）运行
-y=input('请输入数据');
+clear,clc
+%y=input('请输入数据');
+[y]=xlsread('C:\Users\Lenovo\Desktop\mm.xls',-1);
 n=length(y);
+num=0;
+for mm=2:n
+    if exp(-2/(n+1))<(y(mm-1)/y(mm))&&(y(mm-1)/y(mm))<exp(2/(n+1))
+    else
+        num=num+1;
+    end   
+end
+disp('没有通过级比检验个数为');disp(num);
 yy=ones(n,1);
 yy(1)=y(1);
 for i=2:n
@@ -34,10 +44,15 @@ x=1:n;
 xs=2:n+t_test;
 yn=ys(2:n+t_test);
 plot(x,y,'^r',xs,yn,'*-b');
-det=0;
-for i=2:n
-    det=det+abs(yn(i)-y(i));
+flag1=0;flag2=0;
+for i=1:n-1
+    det=(y(i)-yn(i))/y(i);
+    if abs(det)<0.1
+        flag1=flag1+1;
+    elseif abs(det)<0.2
+        flag2=flag2+1;
+    end
 end
-det=det/(n-1);
-disp(['百分绝对误差为：',num2str(det),'%']);
+disp(['残差检验后，有',num2str(100*flag1/(n-1)),'%通过' ...
+    '高精度检验，有',num2str(100*(flag2+flag1)/(n-1)),'%通过低精度检验']);
     disp(['预测值为：',num2str(ys(n+1:n+t_test))]);
