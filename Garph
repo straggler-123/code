@@ -1,0 +1,613 @@
+# 图中最短路程问题
+# 建图(G(e,v))
+# （Dijkstra算法）
+from heapq import *
+def dijkstra(graph, start):
+    vnum = len(graph) # 顶点个数
+    paths = {}
+    cands = [(0,start,start)]
+    heapify(cands) # 转化为小顶堆，便于找到权重最小的边
+    count = 0
+    while count < vnum and cands is not None:
+        print(cands)
+        plen,u,vmin=heappop(cands) # 选出累计路径最短的边
+        if paths.get(vmin) is not None: # 如果已经找到到vmin的最短路径就跳过
+            continue
+        paths[vmin] = plen # 存入最短路径
+        for next_edge in graph[vmin]:
+            if not paths.get(next_edge[2]):
+                heappush(cands, (plen+next_edge[0],u,next_edge[2]))
+        count += 1
+    return paths
+graph = {'A': [(7, 'A', 'B'), (5, 'A', 'D')],
+         'C': [(8, 'C', 'B'), (5, 'C', 'E')],
+         'B': [(7, 'B', 'A'), (8, 'B', 'C'), (9, 'B', 'D'), (7, 'B', 'E')],
+         'E': [(7, 'E', 'B'), (5, 'E', 'C'), (15, 'E', 'D'), (8, 'E', 'F'), (9, 'E', 'G')],
+         'D': [(5, 'D', 'A'), (9, 'D', 'B'), (15, 'D', 'E'), (6, 'D', 'F')],
+         'G': [(9, 'G', 'E'), (11, 'G', 'F')],
+         'F': [(6, 'F', 'D'), (8, 'F', 'E'), (11, 'F', 'G')]}
+print(dijkstra(graph, 'A'))
+# 分支界限计算最短路径和最短路径长度
+import math
+from copy import deepcopy
+
+# 初始化图参数 用字典初始初始化这个图https://blog.csdn.net/qq_34950042/article/details/88387797
+graph = {1: {2: 4, 3: 2, 4: 5},
+         2: {5: 7, 6: 5},
+         3: {6: 9},
+         4: {5: 2, 7: 7},
+         5: {8: 4},
+         6: {10: 6},
+         7: {9: 3},
+         8: {10: 7},
+         9: {10: 8},
+         10: {}
+         }
+
+# 分支界限：计算起始节点到其他所有节点的最短距离
+"""
+1.将起始节点入队，并且初始化起始节点到其他所有节点距离为inf，用costs
+2.检测起始节点的到子节点的距离是否变短，若是，则将其子节点入队
+3.子节点全部检测完，则将起始节点出队，
+4.让队列中的第一个元素作为新的起始节点，重复1,2,3,4
+5.对队列为空，则退出循环
+"""
+# 数据结构：队列，树
+def banch(graph, start):
+    costs = {}  # 记录start到其他所有点的距离
+    trace = {start: [start]}  # 记录start到其他所有点的路径
+
+    # 初始化costs
+    for key in graph.keys():
+        costs[key] = math.inf
+    costs[start] = 0
+
+    queue = [start]  # 初始化queue
+
+    while len(queue) != 0:
+        head = queue[0]  # 起始节点
+        for key in graph[head].keys():  # 遍历起始节点的子节点
+            dis = graph[head][key] + costs[head]
+            if costs[key] > dis:
+                costs[key] = dis
+                temp = deepcopy(trace[head])  # 深拷贝
+                temp.append(key)
+                trace[key] = temp  # key节点的最优路径为起始节点最优路径+key
+                queue.append(key)
+
+        queue.pop(0)  # 删除原来的起始节点
+    print(costs)
+    print(trace)
+banch(graph, 1)
+# Floyd-Warshall算法(任意图，邻接矩阵）
+import math
+
+nodes = ('A', 'B', 'C', 'D', 'E')
+# dis矩阵为方阵
+dis = [[0, 1, 2, math.inf, 4],
+       [1, 0, math.inf, 8, 2],
+       [2, math.inf, 0, math.inf, 6],
+       [math.inf, 8, math.inf, 0, 3],
+       [4, 2, 6, 3, 0]]
+
+
+def shortDistance(dis):
+    node_num = len(dis)
+    for i in range(node_num):  # 十字交叉法的位置位置，先列后行
+        for j in range(node_num):  # 列 表示dis[j][i]的值，即j->i
+            for k in range(j + 1, node_num):  # 行 表示dis[i][k]的值，即i->k，i只是一个桥梁而已
+                # 先列后行，形成一个传递关系，若比原来距离小，则更新
+                if dis[j][k] > dis[j][i] + dis[i][k]:
+                    dis[j][k] = dis[j][i] + dis[i][k]
+                    dis[k][j] = dis[j][i] + dis[i][k]
+
+
+
+# 最小生成树问题https://blog.csdn.net/nanashi_F/article/details/91960357
+# https://github.com/GYT0313/Python-DataStructure/tree/master/10-graph/example-TestGraph
+# Kruskal算法
+edges = [("A", "B", 5), ("A", "G", 7),
+         ("B", "F", 1), ("C", "F", 4),
+         ("C", "D", 3), ("C", "E", 7),
+         ("E", "F", 6), ("D", "E", 4),
+         ("E", "G", 12),("F", "G", 12)]
+vertices=list('ABCDEFG')
+edges.sort(key=lambda x:x[2])
+ori_trees=dict()
+for i in vertices:
+    ori_trees[i]=i
+#寻找根节点
+def find_node(x):
+    if ori_trees[x]!=x:
+        ori_trees[x]=find_node(ori_trees[x])
+    return ori_trees[x]
+#定义最小生成树
+mst=[]
+#定义循环次数，n为需要添加的边数=顶点数-1
+n=len(vertices)-1
+#循环
+for edge in edges:
+    v1,v2,_=edge
+    if find_node(v1)!=find_node(v2):
+        ori_trees[find_node(v2)]=find_node(v1)
+        mst.append(edge)
+        print('添加第'+str(7-n)+'条边后：')
+        n-=1
+        print(ori_trees)
+        print(mst)
+        if n==0:
+            break
+
+
+# 定义生成Y集合的方法
+def create_Y(X):
+    Y = []
+    for point in V:
+        if point not in X:
+            Y.append(point)
+    return Y
+
+"""###################################
+#编写Prim算法
+#   1.变量定义
+#       weight:存放最小边权值
+#       point1:存放Prim算法后找到的边的起点
+#       point2:存放Prim算法后找到的边的终点
+#   2.Prim算法
+###################################"""
+
+#编写Prim算法
+def Prim(V, E):
+    # 1.定义变量
+    weight = 1000
+    point1 = ""
+    point2 = ""
+    # 2.编写Prim算法
+    for i in range(len(V)):
+        if V[i] in X:  # 确定了顶点集合X中元素在顶点集合V中的下标，间接的确定了在边集合中的一个下标
+            for j in range(len(V)):
+                if V[j] in create_Y(X):  # 确定了顶点集合Y中元素在集合V中的下标，间接确定了在边集合中的另一个下标
+                    if (E[i][j] != -1) and (E[i][j] < weight):  # 循环判断，找到顶点集合X到Y之间最小权值的边
+                        weight = E[i][j]
+                        point1 = V[i]
+                        point2 = V[j]
+    print(weight, point1 + "---" + point2)  # 将生成树的这条边进行显示
+    X.append(point2) #将该点加入到操作集合X中
+if __name__ == "__main__":
+    """###################################
+    #构造带权的连通图
+    #   1.构造顶点集合V
+    #   2.构造边集合E
+    #   3.创建操作集合X和Y（X表示加入生成树点的集合，Y表示未加入生成树点的集合）
+    ###################################"""
+    # 1.构造顶点集合V
+    V = ["A", "B", "C", "D", "E", "F"]
+    # 2.构造边集合E
+    E = [[0, 6, 1, 5, -1, -1],
+         [6, 0, 5, -1, 3, -1],
+         [1, 5, 0, 5, 6, 4],
+         [5, -1, 5, 0, -1, 2],
+         [-1, 3, 6, -1, 0, 6],
+         [-1, -1, 4, 2, 6, 0]]
+    # 3.创建操作集合X和Y
+    X = ["A"]
+
+    #4. 定义一个循环变量count（统计生成树中边的个数）
+    count = 0
+    while True:
+        if count < len(V)-1:
+            Prim(V, E)
+            count = count + 1
+        else:
+            break
+
+# 求欧拉回路（一笔画/邮递员路程最短）https://blog.csdn.net/Paul_barnabas/article/details/124024761
+# 建图
+import networkx as nx
+import matplotlib.pyplot as plt
+
+g = nx.Graph(name="G")
+
+list1 = [(1, 2), (2, 3), (3, 4), (4, 8), (8, 12), (12, 16), (16, 15), (15, 14), (14, 13), (13, 9), (9, 5), (5, 1),
+         (5, 6), (6, 7), (7, 8), (9, 10), (10, 11), (11, 12), (2, 6), (6, 10), (10, 14), (3, 7), (7, 11), (11, 15),
+         (2, 5), (3, 8), (12, 15), (9, 14)]
+
+g.add_node(1, name='e1')
+g.add_node(2, name='e2')
+g.add_node(3, name='e3')
+g.add_node(4, name='e4')
+g.add_node(5, name='e5')
+g.add_node(6, name='e6')
+g.add_node(7, name='e7')
+g.add_node(8, name='e8')
+g.add_node(9, name='e9')
+g.add_node(10, name='e10')
+g.add_node(11, name='e11')
+g.add_node(12, name='e12')
+g.add_node(13, name='e13')
+g.add_node(14, name='e14')
+g.add_node(15, name='e15')
+g.add_node(16, name='e16')
+
+g.add_edges_from(list1)
+
+pos = nx.spring_layout
+nx.draw(g, with_labels=True)
+plt.show()
+
+
+def Fleury(g, e):  # g:图    e:起始顶点
+    e1 = e
+    p = []
+    p.append(e)
+
+    for i in range(1, 10):
+        if g.degree(i) % 2 != 0:
+            print("不为欧拉图")
+            return p
+    # 判断是否是欧拉图
+    while 1:
+        t = []
+        for i in g.neighbors(e1):
+            t.append(i)
+        # 用t接收所有邻接节点
+        if len(t) == 1:
+            g.remove_edge(e1, t[0])
+            g.remove_node(e1)
+            e1 = t[0]
+            p.append(e1)
+        # 是悬挂节点直接选取，然后删去节点以及边
+        else:
+            for j in t:
+                g.remove_edge(e1, j)
+                if nx.is_connected(g):
+                    e1 = j
+                    p.append(e1)
+                    break
+                else:
+                    g.add_edge(e1, j)
+            # 判断删去边后图是否连通，如果连通就直接加入路径，如不连通将删去的边接回去，继续判断下一个节点
+        if e1 == e and g.size() == 0:
+            break
+        # 找到回路并且所有边都遍历一遍过后，结束循环
+    return p
+
+p=Fleury(g,1)
+print(p)
+
+# 旅行商（TSP）问题
+# 遗传算法:https://zhuanlan.zhihu.com/p/153098599
+
+# 改良圈算法
+# 用改良圈算法得到的结果几乎可以肯定不是最优的。为了得到更高的精确度，可以
+# 选择不同的初始圈，重复进行几次算法，以求得较精确的结果
+import numpy as np
+import sys
+import networkx as nx
+
+# 生成图
+G = nx.complete_graph(['L','M','N','Pa','Pe','T'])
+
+names = ['L','M','N','Pa','Pe','T']
+weights = [56, 35, 21, 51, 60,
+               21, 57, 78, 70,
+                   36, 68, 68,
+                       51, 61,
+                           13]
+count = 0
+for i in range(0,6):
+    for j in range(i+1,6):
+        G.edges[names[i], names[j]]['weight'] = weights[count]
+        count += 1
+
+G.edges(data='weight')
+nx.draw(G, with_labels=True, pos=nx.spring_layout(G), font_weight='bold')
+nx.draw_networkx_edge_labels(G, pos=nx.spring_layout(G), edge_labels=nx.get_edge_attributes(G, 'weight'), label_pos=0.5)
+
+def find_halmiton_circuit(G,s,path):
+    '''
+    找到一条任意的哈密顿圈，如果有则存到path里，没有则返回False
+    '''
+    # 若已经遍历了所有节点了，此时可以判断是否形成闭环。
+    if len(path) == len(list(G.nodes())):
+        if path[-1] in dict(G.adj[path[0]]):
+            path.append(path[0])
+            return True
+        else:
+            return False
+
+    # 判断该节点是否已经在路径中
+    if s not in path:
+        path.append(s)
+    else:
+        return False
+    print(path)
+#     # 如果该节点没有后续节点了,返回FALSE
+#     if G.adj[path[-1]] == None:
+#         return False
+    for nbr, datadict in G.adj[path[-1]].items():
+        if find_halmiton_circuit(G, nbr, path):
+            return True
+    return False
+
+
+def circle_modification(G,path):
+#     names = list(G.nodes)
+    n = len(path)
+    for i in range(n):
+        for j in range(i+2, n-1):
+            try:
+                # 如果存在更短的路径，更换两条边的选择
+                if G.edges[path[i],path[j]]['weight'] + G.edges[path[i+1],path[j+1]]['weight'] < G.edges[path[i],path[i+1]]['weight'] + G.edges[path[j],path[j+1]]['weight']:
+                    path[i+1:j+1] = path[j:i:-1]
+            except KeyError:
+                print(i,j,"not connected")
+    return True
+# 调用
+path = []
+s = 'Pe'
+if find_halmiton_circuit(G, s, path):
+    print(path)
+print("Found one feasible halmiton circuit")
+if circle_modification(G, path):
+    print(path)
+
+# 采用贪心算法，爬山，退火
+import random
+import copy
+import math
+
+class TSP:
+	"""
+	TSP（Travelling Salesman Problem）
+	旅行商问题的类
+	"""
+	def __init__(self, points):
+		"""
+		points包含了所有旅行城市的位置坐标，起点默认是（0，0）
+		points例如: [(1,2), (3,2)]
+		"""
+		# 加入起点
+		self.points = [(0, 0)] + points
+		self.length = len(self.points)
+		self.map = self.distance_map()
+
+	def distance(self, point1, point2):
+		"""
+		计算两点之间的距离
+		point1: (x1, y1)
+		point2: (x2, y2)
+		"""
+		return ((point1[0] - point2[0]) ** 2 +
+				(point1[1] - point2[1]) ** 2) ** 0.5
+
+
+	def distance_map(self):
+		"""
+		计算所有点到点之间的距离数组
+		例如
+		    起点 点1 点2
+		[
+		起点[0,  2,  3],
+		点1 [1,  0,  2],
+		点2 [3,  2,  0]
+		]
+		"""
+		map = [[0 for _ in range(self.length)]
+				   for _ in range(self.length)]
+		for row in range(self.length):
+			for col in range(self.length):
+				map[row][col] = self.distance(self.points[row], self.points[col])
+		return map
+
+	def router_distance(self, router):
+		"""
+		计算路径的总距离
+		router: [(0, 0), (x1, x2), (x2, y2), (x3, y3)]
+		最后还要回到(0, 0)
+		"""
+		router = router + [(0, 0)]
+		ret = 0
+		for i in range(1, len(router)):
+			ret += self.distance(router[i-1], router[i])
+		return ret
+
+
+class GreedSolution(TSP):
+	"""
+	贪心算法解决TSP问题:
+	"""
+	def __init__(self, points):
+		super().__init__(points)
+
+	def nearest(self, row, arrived):
+		"""
+		找到贪心算法在某个点上可以选择的最优的点的坐标
+		row: 某个点对应与另外所有点的距离列表
+		arrvied: 已经到达过的点的集合
+		"""
+		min_ = float('inf')
+		index = None
+		# print("arrived in nearest:", arrived)
+		for i in range(len(row)):
+			if i in arrived or row[i] == 0:
+				continue
+			if row[i] < min_:
+				min_ = row[i]
+				index = i
+		return index
+
+	def greed(self):
+		"""
+		从起点(0, 0)出发，选择最近的点；
+		再从该点出发，选择最近的点；
+		重复执行该步骤，直到没有点时返回起点。
+
+		返回路径
+		例如： [(0, 0), (3, 4), (0, 0)]
+		"""
+		curr = 0
+		router = [self.points[0]]
+		arrived = set()
+		arrived.add(0)
+		total_distance = 0
+		while True:
+			curr = self.nearest(self.map[curr], arrived)
+			if curr is None:
+				break
+			router.append(self.points[curr])
+			arrived.add(curr)
+		# print(arrived, router)
+		print("greed 总距离:", self.router_distance(router))
+		return router
+
+
+class ClimbSolution(TSP):
+	"""
+	爬山算法解决TSP问题:
+	"""
+	def __init__(self, points):
+		super().__init__(points)
+
+
+	def climb(self):
+		"""
+		爬山算法，查找局部最优解
+		查找过程参考：
+		交换任意两个节点的顺序, 找到局部最优解
+		"""
+		router = self.points
+		distance = self.router_distance(router)
+
+		turn = 1000
+		while turn:
+			p1 = int(random.random() * self.length)
+			p2 = int(random.random() * self.length)
+			while p1 == p2:
+				p2 = int(random.random() * self.length)
+
+			temp = copy.deepcopy(router)
+			temp[p1], temp[p2] = temp[p2], temp[p1]
+			curr_distance = self.router_distance(temp)
+			if curr_distance < distance:
+				distance = curr_distance
+				router = temp
+			turn -= 1
+		print("climb总距离：", distance)
+		return router
+
+
+
+class SASolution(TSP):
+	"""
+	模拟退火算法解决TSP问题:
+	SA（Simulated annealing)
+	"""
+	def __init__(self, points):
+		super().__init__(points)
+
+
+	def sa(self):
+		"""
+		模拟退火算法，查找全局最优解
+		查找过程参考：
+		交换任意两个节点的顺序, 找到局部最优解
+		退火的方式：
+		 1.降温系数α<1，以Tn+1=αTn的形式下降，比如取α=0.99 (*目前采用)
+		 2.Tn=T0/(1+n)
+		 3.Tn=T0/log(1+n)
+		"""
+		router = self.points
+		distance = self.router_distance(router)
+
+		a = 0.99  # 降温系数
+		turn = 1000
+		e = math.e
+		for _ in range(turn):
+			p1 = int(random.random() * self.length)
+			p2 = int(random.random() * self.length)
+			while p1 == p2:
+				p2 = int(random.random() * self.length)
+
+			temp = copy.deepcopy(router)
+			temp[p1], temp[p2] = temp[p2], temp[p1]
+			curr_distance = self.router_distance(temp)
+			if curr_distance < distance * e ** a:
+				distance = curr_distance
+				router = temp
+			# 更新降温系数
+			a = a * a
+		print("sa总距离：", distance)
+		return router
+
+points = [(4, 3), (1, 2), (7, 8), (0.5, 0.9)]
+
+problem = ClimbSolution(points)
+print(problem.climb())
+problem = GreedSolution(points)
+print(problem.greed())
+problem = SASolution(points)
+print(problem.sa())
+
+# 最大流问题
+from ortools.graph import pywrapgraph
+start_nodes = [0, 0, 0, 1, 1, 2, 2, 3, 3]
+end_nodes = [1, 2, 3, 2, 4, 3, 4, 2, 4]
+capacities = [20, 30, 10, 40, 30, 10, 20, 5, 20]
+max_flow = pywrapgraph.SimpleMaxFlow()
+for i in range(0, len(start_nodes)):
+   max_flow.AddArcWithCapacity(start_nodes[i], end_nodes[i], capacities[i])
+# Find the maximum flow between node 0 and node 4.
+if max_flow.Solve(0, 4) == max_flow.OPTIMAL:
+    print('Max flow:', max_flow.OptimalFlow())
+    print('')
+    print('  Arc    Flow / Capacity')
+    for i in range(max_flow.NumArcs()):
+        print('%1s -> %1s   %3s  / %3s' % (
+          max_flow.Tail(i),
+          max_flow.Head(i),
+          max_flow.Flow(i),
+          max_flow.Capacity(i)))
+    print('Source side min-cut:', max_flow.GetSourceSideMinCut())
+    print('Sink side min-cut:', max_flow.GetSinkSideMinCut())
+else:
+    print('There was an issue with the max flow input.')
+
+# 最大流最小费用问题
+
+from ortools.graph import pywrapgraph
+
+# between each pair. For instance, the arc from node 0 to node 1 has acapacity of 15 and a unit cost of 4.
+start_nodes = [0, 0, 1, 1, 1, 2, 2, 3, 4]
+end_nodes = [1, 2, 2, 3, 4, 3, 4, 4, 2]
+capacities = [15, 8, 20, 4, 10, 15, 4, 20, 5]
+unit_costs = [4, 4, 2, 2, 6, 1, 3, 2, 3]
+# Define an array of supplies at each node.
+supplies = [20, 0, 0, -5, -15]
+# Instantiate a SimpleMinCostFlow solver.
+min_cost_flow = pywrapgraph.SimpleMinCostFlow()
+# Add each arc.
+for i in range(0, len(start_nodes)):
+    min_cost_flow.AddArcWithCapacityAndUnitCost(start_nodes[i], end_nodes[i],
+                                                capacities[i], unit_costs[i])
+# Add node supplies.
+for i in range(0, len(supplies)):
+    min_cost_flow.SetNodeSupply(i, supplies[i])
+# Find the minimum cost flow between node 0 and node 4.
+if min_cost_flow.Solve() == min_cost_flow.OPTIMAL:
+    print('Minimum cost:', min_cost_flow.OptimalCost())
+    print('')
+    print('  Arc    Flow / Capacity  Cost')
+    for i in range(min_cost_flow.NumArcs()):
+        cost = min_cost_flow.Flow(i) * min_cost_flow.UnitCost(i)
+        print('%1s -> %1s   %3s  / %3s       %3s' % (
+            min_cost_flow.Tail(i),
+            min_cost_flow.Head(i),
+            min_cost_flow.Flow(i),
+            min_cost_flow.Capacity(i),
+            cost))
+else:
+    print('There was an issue with the min cost flow input.')
+
+
+
