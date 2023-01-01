@@ -1,5 +1,5 @@
 # 偏最小二乘，求解多对多变量间的对应关系
-# https://blog.csdn.net/dongke1991/article/details/126843609
+# https://blog.csdn.net/dongke1991/article/details/126843609（流程代码）
 import numpy as np
 x1=[191,189,193,162,189,182,211,167,176,154,169,166,154,247,193,202,176,157,156,138]
 x2=[36,37,38,35,35,36,38,34,31,33,34,33,34,46,36,37,37,32,33,33]
@@ -85,3 +85,38 @@ for i in range(m):
     beta_target=np.append(beta_target,a,axis=1)
 target=np.concatenate([ch0,beta_target],axis=0) #回归方程的系数，每一列是一个方程，每一列的第一个数是常数项
 print(target)
+
+
+# 可调用的函数
+import pandas as pd
+from sklearn.cross_decomposition import PLSRegression
+from sklearn import datasets 
+from sklearn.model_selection import GridSearchCV
+import numpy as np
+
+#导入数据集
+dataset = datasets.load_linnerud() 
+
+#数据集读取为dataframe
+col_names = dataset['feature_names'] + dataset['target_names']
+data = pd.DataFrame(data= np.c_[dataset['data'], dataset['target']], columns=col_names)
+
+#训练集
+x_train=np.array(data.loc[:,dataset['feature_names']])
+y_train=np.array(data.loc[:,dataset['target_names']])
+
+#回归模型，参数
+pls_model_setup = PLSRegression(scale=True)
+param_grid = {'n_components': range(1, 4)}
+
+#GridSearchCV 自动调参
+gsearch = GridSearchCV(pls_model_setup, param_grid)
+
+#在训练集上训练模型
+pls_model = gsearch.fit(x_train, y_train)
+
+#预测
+pred = pls_model.predict(x_train)
+
+#打印 coef
+print('Partial Least Squares Regression coefficients:',pls_model.best_estimator_.coef_)
