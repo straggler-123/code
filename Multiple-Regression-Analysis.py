@@ -271,5 +271,5 @@ def main():
 if __name__ == '__main__':
     main()
 
-#判别分析https://blog.csdn.net/weixin_45678130/article/details/119349864
+#判别分析（bayes,fisher)https://blog.csdn.net/weixin_45678130/article/details/119349864
 #https://blog.csdn.net/pengjian444/article/details/71138003
